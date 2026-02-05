@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Planner</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+</head>
+<body>
+    
+    <div class="container">
+        <div class="header-row">
+            <h1 data-i18n="app_title">Budget Management 💸</h1>
+            <div class="lang-picker">
+                <span class="lang-icon" aria-hidden="true">🌐</span>
+                <select id="language-select" class="lang-select" aria-label="Language">
+                    <option value="en">EN</option>
+                    <option value="tr">TR</option>
+                    <option value="de">DE</option>
+                </select>
+            </div>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: #666; margin-top: 15px;" data-i18n="total_remaining_budget">Total Remaining Budget</p>
+        <div id="total-remaining-eur" style="font-size: 1.5rem; color: #2c3e50; font-weight: bold;">€0.00</div>
+        <div id="total-remaining-try" style="font-size: 1rem; color: #7f8c8d; margin-bottom: 20px;">(0.00 TL)</div>
+        <div id="initial-budget" class="initial-budget">Initial budget: -</div>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        
+        <div id="daily-limit-section" class="daily-limit">
+            <p class="daily-limit-title" data-i18n="daily_limit">Daily Safe-to-Spend Limit</p>
+            <div id="daily-limit-display" class="daily-limit-value">€0.00</div>
+            <div id="daily-limit-try" class="daily-limit-sub">(0.00 TL)</div>
+        </div>
+        
+        <div class="display-card" style="margin-top: 14px; padding: 12px;">
+            <h4 style="text-align: center; color: #666; margin-bottom: 8px; font-size: 0.8rem;" data-i18n="weekly_monthly_summary">Weekly & Monthly Summary</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label" data-i18n="this_week_total">This Week Total</div>
+                    <div id="weekly-total" class="summary-value">-</div>
+                    <div id="weekly-top-category" class="summary-sub">Top: -</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label" data-i18n="this_month_total">This Month Total</div>
+                    <div id="monthly-total" class="summary-value">-</div>
+                    <div id="monthly-top-category" class="summary-sub">Top: -</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="setup-area" id="setup-area" style="margin: 20px 0; padding: 20px; border: 1px solid #e0e0e0; border-radius: 15px; background: white;">
+            <p style="font-size: 0.95rem; color: #444; font-weight: 600; margin-bottom: 10px;" data-i18n="budget_setup">📊 Budget Setup</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex:1;">
+                    <label style="font-size: 0.75rem; color:#888;" data-i18n="my_budget_currency">My Budget Currency</label>
+                    <select id="base-currency" style="width: 100%; height: 35px; border-radius: 6px; border: 1px solid #ddd;">
+                        <option value="" selected disabled data-i18n="select_currency">Select currency...</option>
+                        <option value="EUR">🇪🇺 EUR (Euro)</option>
+                        <option value="USD">🇺🇸 USD (Dollar)</option>
+                        <option value="GBP">🇬🇧 GBP (Pound)</option>
+                        <option value="TRY">🇹🇷 TRY (Lira)</option>
+                        <option value="RON">🇷🇴 RON (Lei)</option>
+                        <option value="PLN">🇵🇱 PLN (Zloty)</option>
+                        <option value="HUF">🇭🇺 HUF (Forint)</option>
+                        <option value="CZK">🇨🇿 CZK (Koruna)</option>
+                        <option value="BGN">🇧🇬 BGN (Lev)</option>
+                        <option value="DKK">🇩🇰 DKK (Krone)</option>
+                        <option value="SEK">🇸🇪 SEK (Krona)</option>
+                        <option value="NOK">🇳🇴 NOK (Krone)</option>
+                        <option value="CHF">🇨🇭 CHF (Franc)</option>
+                        <option value="RSD">🇷🇸 RSD (Dinar)</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size: 0.75rem; color:#888;" data-i18n="local_currency">Local Currency</label>
+                    <select id="target-currency" style="width: 100%; height: 35px; border-radius: 6px; border: 1px solid #ddd;">
+                        <option value="" selected disabled data-i18n="select_currency">Select currency...</option>
+                        <option value="TRY">🇹🇷 TRY (Lira)</option>
+                        <option value="RON">🇷🇴 RON (Lei)</option>
+                        <option value="PLN">🇵🇱 PLN (Zloty)</option>
+                        <option value="HUF">🇭🇺 HUF (Forint)</option>
+                        <option value="CZK">🇨🇿 CZK (Koruna)</option>
+                        <option value="BGN">🇧🇬 BGN (Lev)</option>
+                        <option value="DKK">🇩🇰 DKK (Krone)</option>
+                        <option value="SEK">🇸🇪 SEK (Krona)</option>
+                        <option value="NOK">🇳🇴 NOK (Krone)</option>
+                        <option value="CHF">🇨🇭 CHF (Franc)</option>
+                        <option value="RSD">🇷🇸 RSD (Dinar)</option>
+                        <option value="EUR">🇪🇺 EUR (Euro)</option>
+                        <option value="USD">🇺🇸 USD (Dollar)</option>
+                        <option value="GBP">🇬🇧 GBP (Pound)</option>
+                    </select>
+                </div>
+            </div>
+        
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <input type="number" id="total-grant" placeholder="Total Grant" data-i18n-placeholder="total_grant" style="flex: 1;">
+                <input type="date" id="end-date" style="flex: 1;">
+            </div>
+            
+            <button onclick="saveInitialSettings()" class="primary-button" data-i18n="start_tracking">START TRACKING</button>
+        </div>
+
+        <div style="margin-top: 10px; margin-bottom: 20px;">
+            <button onclick="toggleFundsArea()" style="width: 100%; background: transparent; color: #4f46e5; border: 1px dashed #4f46e5; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+                <span data-i18n="add_extra_funds">💰 Add Extra Funds (Click to Open)</span>
+            </button>
+        
+            <div id="add-funds-container" style="display: none; background: #eef2ff; padding: 15px; margin-top: 10px; border-radius: 10px; border: 1px solid #c7d2fe;">
+                <p style="font-size: 0.8rem; margin-bottom: 8px; color: #4338ca; text-align: center;" data-i18n="add_money_to_budget">Add money to your budget</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="fund-amount" placeholder="Amount" data-i18n-placeholder="amount" style="flex: 2; height: 38px;">
+                    <select id="fund-currency" style="flex: 1; height: 38px;">
+                        <option value="" selected disabled data-i18n="select_currency_short">...</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="TRY">🇹🇷 TRY</option>
+                        <option value="RON">🇷🇴 RON</option>
+                        <option value="PLN">🇵🇱 PLN</option>
+                        <option value="HUF">🇭🇺 HUF</option>
+                        <option value="CZK">🇨🇿 CZK</option>
+                        <option value="BGN">🇧🇬 BGN</option>
+                        <option value="DKK">🇩🇰 DKK</option>
+                        <option value="SEK">🇸🇪 SEK</option>
+                        <option value="NOK">🇳🇴 NOK</option>
+                        <option value="CHF">🇨🇭 CHF</option>
+                        <option value="RSD">🇷🇸 RSD</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="GBP">🇬🇧 GBP</option>
+                    </select>
+                </div>
+                <button onclick="confirmAddFunds()" style="width: 100%; margin-top: 8px; background: #4338ca; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    <span data-i18n="confirm_add">CONFIRM & ADD</span>
+                </button>
+            </div>
+        </div>
+    
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    
+        <div class="input-group">
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px; text-align: center;" data-i18n="log_expenses">Log your daily expenses</p>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                <input type="number" id="expense-amount" placeholder="Amount" data-i18n-placeholder="amount" style="flex: 2; min-width: 100px;">
+            <select id="expense-currency" style="flex: 1;">
+                <option value="" selected disabled data-i18n="select_currency_short">...</option>
+                    <option value="EUR">🇪🇺 EUR</option>
+                    <option value="TRY">🇹🇷 TRY</option>
+                    <option value="RON">🇷🇴 RON</option>
+                    <option value="PLN">🇵🇱 PLN</option>
+                    <option value="HUF">🇭🇺 HUF</option>
+                    <option value="CZK">🇨🇿 CZK</option>
+                    <option value="BGN">🇧🇬 BGN</option>
+                    <option value="DKK">🇩🇰 DKK</option>
+                    <option value="SEK">🇸🇪 SEK</option>
+                    <option value="NOK">🇳🇴 NOK</option>
+                    <option value="CHF">🇨🇭 CHF</option>
+                    <option value="RSD">🇷🇸 RSD</option>
+                    <option value="USD">🇺🇸 USD</option>
+                    <option value="GBP">🇬🇧 GBP</option>
+                </select>
+            </div>
+        
+            <select id="expense-category" style="width: 100%; margin-bottom: 15px;">
+                <option value="" disabled selected data-i18n="choose_category">Choose Category...</option>
+                <option value="Food" data-i18n="cat_food">🍔 Food & Drink</option>
+                <option value="Transport" data-i18n="cat_transport">🚌 Transport</option>
+                <option value="Entertainment" data-i18n="cat_entertainment">🎉 Entertainment</option>
+                <option value="Travel" data-i18n="cat_travel">✈️ Travel</option>
+                <option value="Investment" data-i18n="cat_investment">📈 Investment</option>
+                <option value="Health" data-i18n="cat_health">💊 Health</option>
+                <option value="Other" data-i18n="cat_other">📦 Other</option>
+            </select>
+
+            <input type="text" id="expense-note" placeholder="Note (optional)" data-i18n-placeholder="note_optional" style="width: 100%; margin-bottom: 12px;">
+        
+            <div style="display: flex; justify-content: center;">
+                <button onclick="addExpense()" class="log-button" data-i18n="log_expense_button">LOG EXPENSE</button>
+            </div>
+        </div>
+
+        <div class="filter-toggle">
+            <button onclick="toggleSearchFilters()" id="filter-toggle-btn" data-i18n="find_expense">Find expense</button>
+        </div>
+
+        <div class="filter-tools" id="filter-tools" style="display: none;">
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px; text-align: center;" data-i18n="search_date_filter">Search & date filter</p>
+            <input type="text" id="filter-search" placeholder="Search category or note" data-i18n-placeholder="search_category_note">
+            <div class="filter-dates">
+                <input type="date" id="filter-from">
+                <input type="date" id="filter-to">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+            <button onclick="filterList('all')" data-category="all" class="filter-btn active" style="background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;" data-i18n="filter_all">All</button>
+            <button onclick="filterList('Food')" data-category="Food" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_food">🍔 Food</button>
+            <button onclick="filterList('Transport')" data-category="Transport" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_transport">🚌 Transport</button>
+            <button onclick="filterList('Entertainment')" data-category="Entertainment" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_entertainment">🎉 Entertainment</button>
+            <button onclick="filterList('Travel')" data-category="Travel" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_travel">✈️ Travel</button>
+            <button onclick="filterList('Investment')" data-category="Investment" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_investment">📈 Investment</button>
+            <button onclick="filterList('Health')" data-category="Health" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_health">💊 Health</button>
+            <button onclick="filterList('Other')" data-category="Other" class="filter-btn" style="background: #f3f4f6; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.85rem;" data-i18n="cat_other">📦 Other</button>
+        </div>
+
+
+        <div class="transactions-header">
+            <h3 style="font-size: 1rem; color: #333; margin-top: 15px;" data-i18n="recent_transactions">Recent Transactions</h3>
+            <button onclick="openDetailedView()" class="secondary-button" data-i18n="detailed_view">Detailed view</button>
+        </div>
+        
+        <div class="bulk-actions">
+            <button onclick="selectAllExpenses()" class="secondary-button" id="select-all-btn" data-i18n="select_all">Select all</button>
+            <button onclick="undoDeleteExpenses()" class="secondary-button" id="undo-delete" disabled data-i18n="undo">Undo</button>
+            <button onclick="deleteSelectedExpenses()" class="danger-button" id="delete-selected" data-i18n="delete_selected">Delete selected</button>
+            <span id="selected-count" class="bulk-count">0 selected</span>
+        </div>
+
+        <ul id="expense-list" style="list-style: none; padding: 0; margin-top: 10px; text-align: left;"></ul>
+
+        <div class="advanced-toggle">
+            <button onclick="toggleAdvancedSection()" id="advanced-toggle-btn">Show advanced options</button>
+        </div>
+
+        <div id="advanced-bottom" class="advanced-section" style="display: none;">
+            <div style="margin-top: 30px; padding: 15px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                <h4 style="text-align: center; color: #666; margin-bottom: 10px; font-size: 0.9rem;" data-i18n="spending_breakdown">Spending Breakdown</h4>
+                <canvas id="expenseChart" class="chart-canvas" width="320" height="320"></canvas>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                <h4 style="text-align: center; color: #666; margin-bottom: 10px; font-size: 0.9rem;" data-i18n="spending_trend">Spending Trend</h4>
+                <div id="trend-compare" style="text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 10px;">-</div>
+                <canvas id="trendChart" class="chart-canvas" width="320" height="200"></canvas>
+            </div>
+
+            <div class="report-card" style="margin-top: 20px;">
+                <div class="report-header">
+                    <h4 data-i18n="monthly_report">Monthly Report</h4>
+                    <input type="month" id="report-month">
+                </div>
+                <div class="report-grid">
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n="total_spend">Total Spend</div>
+                        <div id="report-total" class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n="top_category">Top Category</div>
+                        <div id="report-top-category" class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n="transactions">Transactions</div>
+                        <div id="report-count" class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n="avg_per_day">Avg / Day</div>
+                        <div id="report-avg-daily" class="summary-value">-</div>
+                    </div>
+                </div>
+                <div class="report-chart">
+                <canvas id="monthlyChart" class="chart-canvas" width="320" height="200"></canvas>
+                </div>
+                <div class="report-chart">
+                <canvas id="monthlyCategoryChart" class="chart-canvas" width="320" height="260"></canvas>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <button onclick="exportToExcel()" style="background-color: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <span data-i18n="export_excel">📥 Export to Excel</span>
+                </button>
+
+                <div id="undo-bar" class="undo-bar" style="display: none;">
+                    <span data-i18n="items_deleted">Items deleted.</span>
+                    <button onclick="undoDeleteExpenses()" data-i18n="undo">Undo</button>
+                </div>
+
+                <button onclick="exportToJSON()" style="background-color: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <span data-i18n="export_json">🧩 Export JSON Backup</span>
+                </button>
+                <button onclick="triggerJSONImport()" style="background-color: #7c3aed; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <span data-i18n="import_json">♻️ Import JSON Backup</span>
+                </button>
+                <input type="file" id="import-json-input" accept="application/json" style="display:none;">
+            
+                <button onclick="resetApp()" style="background-color: #e74c3c; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 0.85rem; opacity: 0.9;">
+                    <span data-i18n="reset_all">Reset All Data</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="detail-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="all_transactions">All Transactions</h3>
+                <button onclick="closeDetailedView()" class="secondary-button" data-i18n="close">Close</button>
+            </div>
+            <div class="bulk-actions">
+                <button onclick="selectAllExpenses()" class="secondary-button" id="select-all-modal-btn" data-i18n="select_all">Select all</button>
+                <button onclick="undoDeleteExpenses()" class="secondary-button" id="undo-delete-modal" disabled data-i18n="undo">Undo</button>
+                <button onclick="deleteSelectedExpenses()" class="danger-button" id="delete-selected-modal" data-i18n="delete_selected">Delete selected</button>
+                <span id="selected-count-modal" class="bulk-count">0 selected</span>
+            </div>
+            <ul id="full-expense-list" class="modal-list"></ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
